@@ -1,54 +1,38 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
+import axios from "axios";
 
-const RegistroScreen = () => {
-    const [nombre, setNombre] = useState('');
-    const [apellido, setApellido] = useState('');
+const LoginScreen = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const navigation = useNavigation();
-    const baseUrl = ' https://viable-rhino-informally.ngrok-free.app'; 
-    
-    const handleRegister = async () => {
+    const baseUrl = 'https://viable-rhino-informally.ngrok-free.app'; 
+  
+    const handleLogin = async () => {
       try {
-        const response = await axios.post(`${baseUrl}/api/user/register`, {
-          nombre,
-          apellido,
+        const response = await axios.post(`${baseUrl}/api/user/login`, {
           username,
           password,
         });
-
+  
         if (response.data.success) {
-          Alert.alert('Register Exitoso', 'Ingresaste correctamente.', [
+          Alert.alert('Login Exitoso', 'Ingresaste correctamente.', [
             { text: 'OK', onPress: () => navigation.replace('EventosScreen') },
           ]);
         } else {
-          Alert.alert('Error', 'Usuario, nombre, apellido o contraseña incorrecta.');
+          Alert.alert('Error', 'Usuario o contraseña incorrecta.');
         }
       } catch (error) {
         console.error(error);
         Alert.alert('Error', 'Hubo un problema al intentar iniciar sesión.');
       }
     };
-
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Registrarse</Text>
-  
-        <TextInput
-          placeholder="Nombre"
-          style={styles.input}
-          value={nombre} 
-          onChangeText={setNombre}
-        />
-  
-        <TextInput
-          placeholder="Apellido"
-          style={styles.input}
-          value={apellido}
-          onChangeText={setApellido}
-        />
+        <View style={styles.logoContainer}>
+          <Image source={require('./../../assets/icon.png')} style={styles.logo} />
+        </View>
   
         <TextInput
           placeholder="Username"
@@ -59,13 +43,17 @@ const RegistroScreen = () => {
   
         <TextInput
           placeholder="Password"
-          style={styles.input}
           secureTextEntry
+          style={styles.input}
           value={password}
           onChangeText={setPassword}
         />
   
-        <Button title="Registrarse" onPress={handleRegister} />
+        <Button title="Ingresar" onPress={handleLogin} />
+  
+        <TouchableOpacity onPress={() => navigation.navigate('RegisterScreen')}>
+          <Text style={styles.registerText}>¿No tienes cuenta? Regístrate aquí</Text>
+        </TouchableOpacity>
       </View>
     );
   };
@@ -77,9 +65,14 @@ const RegistroScreen = () => {
       alignItems: 'center',
       padding: 20,
     },
-    title: {
-      fontSize: 24,
-      fontWeight: 'bold',
+    logoContainer: {
+      marginBottom: 40,
+    },
+    logo: {
+      width: 100,
+      height: 100,
+    },
+    icon: {
       marginBottom: 40,
     },
     input: {
@@ -91,6 +84,11 @@ const RegistroScreen = () => {
       paddingHorizontal: 10,
       marginBottom: 20,
     },
+    registerText: {
+      marginTop: 20,
+      color: 'blue',
+      textDecorationLine: 'underline',
+    },
   });
 
-export default RegistroScreen;
+export default LoginScreen; 

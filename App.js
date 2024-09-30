@@ -1,5 +1,13 @@
-import LoginScreen from "./screens/LoginScreen";
-import RegistroScreen from './screens/RegistroScreen';
+import { Ionicons } from '@expo/vector-icons';
+import { createStackNavigator } from "@react-navigation/stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { NavigationContainer } from "@react-navigation/native";
+import LoginScreen from "./screens/LoginScreens/LoginScreen";
+import RegistroScreen from './screens/LoginScreens/RegistroScreen';
+import EventosScreen from "./screens/LoginScreens/EventosScreens/EventoScreen";
+import detalleEventoScreen from "./screens/LoginScreens/EventosScreens/detalleEventoScreen";
+import categoriaScreen from './screens/LoginScreens/CategoriaScreen.js/categoriaScreen';
+import perfilScreen from './screens/LoginScreens/PerfilScreen.js/perfilScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -8,8 +16,8 @@ function MyTabs() {
   return (
     <Tab.Navigator>
       <Tab.Screen
-        name="DetalleEventosScreen"
-        component={DetalleEventosScreen}
+        name="detalleEventoScreen"
+        component={detalleEventoScreen}
         options={{
           tabBarIcon: ({ color }) => (
             <Ionicons name="calendar-outline" size={24} color={color} />
@@ -17,7 +25,7 @@ function MyTabs() {
         }}
       />
       <Tab.Screen
-        name="CategoriasScreen"
+        name="categoriaScreen"
         component={CategoriasScreen}
         options={{
           tabBarIcon: ({ color }) => (
@@ -26,8 +34,8 @@ function MyTabs() {
         }}
       />
       <Tab.Screen
-        name="ProfileScreen"
-        component={ProfileScreen}
+        name="perfilScreen"
+        component={perfilScreen}
         options={{
           tabBarIcon: ({ color }) => (
             <Ionicons name="person-outline" size={24} color={color} />
@@ -64,6 +72,26 @@ export default function App() {
         <Stack.Screen
           name="MainTabs"
           component={MyTabs}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EventosScreen"
+          component={EventosScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="detalleEventoScreen"
+          component={detalleEventoScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="categoriaScreen"
+          component={categoriaScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="perfilScreen"
+          component={perfilScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
