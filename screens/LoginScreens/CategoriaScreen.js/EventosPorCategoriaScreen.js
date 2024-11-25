@@ -1,25 +1,27 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator,RefreshControl, StatusBar } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, StatusBar } from 'react-native';
+import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native'; // Añadir useRoute
 import axios from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-const CategoriasScreen = () => {
-  const [categorias, setCategorias] = useState([]);
+const EventosPorCategoriaScreen = () => {
+  const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation();
+  const route = useRoute();
   const baseUrl = 'https://viable-rhino-informally.ngrok-free.app';
+  const categoriaNombre = route.params?.categoriaNombre || 'Eventos';
 
-  const fetchCategorias = async () => {
+  const fetchEventos = async () => {
     try {
-      const response = await axios.get(`${baseUrl}/api/event-category`);
-      console.log(response);
-      console.log('Datos recibidos:', response.data.categorias?.length || 0);
-      setCategorias(response.data);
+      const miUrl = `${baseUrl}/api/event/?category=${categoriaNombre}`;
+      const eventosResponse = await axios.get(miUrl);
+      setEventos(eventosResponse.data);
     } catch (error) {
-      console.error('Error al obtener las categorías:', error);
+      console.error('Error al obtener los eventos:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -27,84 +29,78 @@ const CategoriasScreen = () => {
   };
 
   useEffect(() => {
-    fetchCategorias();
+    fetchEventos();
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      fetchCategorias();
-    }, [])
+      fetchEventos();
+    }, [categoriaNombre])
   );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchCategorias();
-  }, []);
+    fetchEventos();
+  }, [categoriaNombre]);
 
-  const renderCategoriaItem = ({ item }) => (
+  // Definir renderEventoItem aquí
+  const renderEventoItem = ({ item }) => (
     <TouchableOpacity
-      style={styles.categoriaContainer}
-      onPress={() => navigation.navigate('EventosScreen', { categoriaId: item.id, categoriaNombre: item.name })}
+      style={styles.eventContainer}
+      onPress={() => navigation.navigate('DetalleEventosScreen', { eventId: item.id })}
     >
-      <LinearGradient
-        colors={['#4c669f', '#3b5998', '#192f6a']}
-        style={styles.categoriaGradient}
-      >
-        <Text style={styles.categoriaName}>{item.name}</Text>
-        <Text style={styles.categoriaDescription}>{item.description}</Text>
-      </LinearGradient>
+      <Text style={styles.eventName}>{item.name}</Text>
+      <Text style={styles.eventDescription}>{item.description}</Text>
+      <Text style={styles.eventDetails}>
+        Fecha: {new Date(item.start_date).toLocaleDateString()}
+        {item.id && ` - ID: ${item.id}`}
+      </Text>
     </TouchableOpacity>
   );
-  
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4c669f" />
-      </View>
-    );
-  }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
       <LinearGradient
         colors={['#4c669f', '#3b5998', '#192f6a']}
         style={styles.header}
       >
-        <Text style={styles.headerText}>CATEGORÍAS</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#ffffff" />
+        </TouchableOpacity>
+        <Text style={styles.headerText}>{categoriaNombre}</Text>
       </LinearGradient>
       <FlatList
-        data={categorias}
-        renderItem={renderCategoriaItem}
+        data={eventos}
+        renderItem={renderEventoItem} // Usar la función definida
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={
-          <Text style={styles.noCategoriasText}>No hay categorías disponibles</Text>
+          <Text style={styles.noEventosText}>No hay eventos disponibles para esta categoría</Text>
         }
       />
       <View style={styles.footer}>
-      <TouchableOpacity style={styles.footerItem} onPress={() => navigation.navigate('DetalleEventosScreen')}>
+        <TouchableOpacity style={styles.footerItem} onPress={() => navigation.navigate('DetalleEventosScreen')}>
           <Ionicons name="calendar-outline" size={24} color="#4c669f" />
-          <Text style={styles.tabText}>Eventos</Text>
+          <Text style={styles.footerText}>Eventos</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.footerItem} onPress={() => navigation.navigate('CategoriasScreen')}>
           <Ionicons name="search-outline" size={24} color="#4c669f" />
-          <Text style={styles.tabText}>Categorías</Text>
+          <Text style={styles.footerText}>Categorías</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.footerItem} onPress={() => navigation.navigate('ProfileScreen')}>
           <Ionicons name="person-outline" size={24} color="#4c669f" />
-          <Text style={styles.tabText}>Perfil</Text>
+          <Text style={styles.footerText}>Perfil</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.footerItem} onPress={() => navigation.navigate('LoginScreen')}>
           <Ionicons name="menu-outline" size={24} color="#4c669f" />
-          <Text style={styles.tabText}>Menú</Text>
+          <Text style={styles.footerText}>Menú</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -121,42 +117,48 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 16,
-    paddingTop: StatusBar.currentHeight + 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    marginRight: 16,
   },
   headerText: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#ffffff',
-    textAlign: 'center',
+    flex: 1,
   },
   listContainer: {
     padding: 16,
   },
-  categoriaContainer: {
-    marginBottom: 16,
+  eventContainer: {
+    backgroundColor: '#ffffff',
     borderRadius: 8,
-    overflow: 'hidden',
-  },
-  categoriaGradient: {
     padding: 16,
+    marginBottom: 16,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  categoriaImage: {
-    width: '100%',
-    height: 150,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  categoriaName: {
+  eventName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 4,
+    marginBottom: 8,
+    color: '#333',
   },
-  categoriaDescription: {
+  eventDescription: {
     fontSize: 14,
-    color: '#e0e0e0',
+    color: '#666',
+    marginBottom: 8,
   },
-  noCategoriasText: {
+  eventDetails: {
+    fontSize: 12,
+    color: '#999',
+  },
+  noEventosText: {
     fontSize: 16,
     textAlign: 'center',
     marginTop: 20,
@@ -181,4 +183,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CategoriasScreen;
+export default EventosPorCategoriaScreen;
